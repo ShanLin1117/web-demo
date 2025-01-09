@@ -1,0 +1,7 @@
+spring:
+  application:
+    name: web-demo
+jwt:
+  secret: your_jwt_secret_key_should_be_very_long_and_secure_at_least_256_bits
+  accessTokenExpiration: 3600000  # 1小時
+  refreshTokenExpiration: 86400000  # 24小時

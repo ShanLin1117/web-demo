@@ -1,0 +1,163 @@
+<!-- src/main/resources/templates/index.html -->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Web Demo</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .nav-link.active {
+            background-color: #e9ecef;
+        }
+        .content-wrapper {
+            min-height: calc(100vh - 56px);
+        }
+        .loading {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        .loading.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">Web Demo</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-page="home">Home</a>
+                    </li>
+                </ul>
+                <div class="d-flex">
+                    <span class="navbar-text me-3" id="userInfo"></span>
+                    <button class="btn btn-outline-light" onclick="logout()">Logout</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row content-wrapper">
+            <div class="col-12 p-4" id="mainContent">
+                <!-- Dynamic content will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <div class="loading" id="loading">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        class App {
+            constructor() {
+                this.currentPage = 'home';
+                this.init();
+            }
+
+            init() {
+                this.checkAuth();
+                this.setupEventListeners();
+                this.loadContent(this.currentPage);
+            }
+
+            checkAuth() {
+                const token = localStorage.getItem('jwt_token');
+                if (!token) {
+                    window.location.href = '/login.html';
+                    return;
+                }
+                // 解析 JWT 顯示使用者資訊
+                try {
+                    const payload = JSON.parse(atob(token.split('.')[1]));
+                    document.getElementById('userInfo').textContent = `Welcome, ${payload.sub}`;
+                } catch (e) {
+                    console.error('Error parsing token:', e);
+                }
+            }
+
+            setupEventListeners() {
+                // 設置導航事件
+                document.querySelectorAll('[data-page]').forEach(link => {
+                    link.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const page = e.target.dataset.page;
+                        this.loadContent(page);
+                        this.updateActiveNav(page);
+                    });
+                });
+            }
+
+            async loadContent(page) {
+                const loading = document.getElementById('loading');
+                const mainContent = document.getElementById('mainContent');
+                try {
+                    loading.classList.add('show');
+                    const token = localStorage.getItem('jwt_token');
+                    const response = await fetch(`/api/${page}`, {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+
+                    if (response.ok) {
+                        const content = await response.text();
+                        mainContent.innerHTML = this.formatContent(content);
+                    } else if (response.status === 401 || response.status === 403) {
+                        localStorage.removeItem('jwt_token');
+                        window.location.href = '/login.html';
+                    } else {
+                        throw new Error('Failed to load content');
+                    }
+                } catch (error) {
+                    mainContent.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
+                } finally {
+                    loading.classList.remove('show');
+                }
+            }
+
+            formatContent(content) {
+                // 可以在這裡對內容進行格式化
+                return `<div class="card">
+                    <div class="card-body">
+                        ${content}
+                    </div>
+                </div>`;
+            }
+
+            updateActiveNav(page) {
+                document.querySelectorAll('.nav-link').forEach(link => {
+                    link.classList.remove('active');
+                    if (link.dataset.page === page) {
+                        link.classList.add('active');
+                    }
+                });
+            }
+        }
+
+        // 登出功能
+        function logout() {
+            localStorage.removeItem('jwt_token');
+            window.location.href = '/login.html';
+        }
+
+        // 初始化應用
+        document.addEventListener('DOMContentLoaded', () => {
+            new App();
+        });
+    </script>
+</body>
+</html>
