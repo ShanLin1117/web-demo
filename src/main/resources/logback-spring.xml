@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+        
+    <!-- 從環境變數獲取日誌路徑 -->
+    <springProperty scope="context" name="logger.path" source="logger.path" defaultValue="${user.home}/web-demo/logs"/>
+
+    <!-- 控制台輸出 -->
+    <appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} [%X{ip}] - %msg%n</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <!-- 檔案輸出 - 每日切割並壓縮 -->
+    <appender name="File" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${logger.path}/app.log</file>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} [%X{ip}] - %msg%n</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- 當天的日誌不壓縮，之前的日誌壓縮成.gz -->
+            <fileNamePattern>${logger.path}/app-%d{yyyy-MM-dd}.log.gz</fileNamePattern>
+        </rollingPolicy>
+    </appender>
+
+    <!-- 錯誤日誌 - 每日切割並壓縮 -->
+    <appender name="Error" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${logger.path}/error.log</file>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} [%X{ip}] - %msg%n</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>ERROR</level>
+        </filter>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- 當天的錯誤日誌不壓縮，之前的日誌壓縮成.gz -->
+            <fileNamePattern>${logger.path}/error-%d{yyyy-MM-dd}.log.gz</fileNamePattern>
+        </rollingPolicy>
+    </appender>
+
+    <!-- SQL輸出設定 -->
+    <logger name="org.hibernate.SQL" level="DEBUG"/>
+    <logger name="org.hibernate.type.descriptor.sql" level="TRACE"/>
+    <logger name="org.hibernate.transaction" level="TRACE"/>
+    <logger name="org.springframework.orm.jpa" level="DEBUG"/>
+    <logger name="org.springframework.transaction" level="DEBUG"/>
+
+    <!-- 應用日誌配置 -->
+    <logger name="com.yourpackage" level="INFO" additivity="false">
+        <appender-ref ref="Console" />
+        <appender-ref ref="File" />
+        <appender-ref ref="Error" />
+    </logger>
+
+    <!-- Root Logger -->
+    <root level="INFO">
+        <appender-ref ref="Console" />
+        <appender-ref ref="File" />
+        <appender-ref ref="Error" />
+    </root>
+
+</configuration>

@@ -1,9 +1,5 @@
-package com.shan.webdemo.controller;
+package com.shan.webdemo.controller.api;
 
-import com.shan.webdemo.dto.AuthRequest;
-import com.shan.webdemo.dto.AuthResponse;
-import com.shan.webdemo.security.JwtService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -13,6 +9,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.shan.webdemo.dto.AuthRequest;
+import com.shan.webdemo.dto.AuthResponse;
+import com.shan.webdemo.security.JwtService;
+
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -25,18 +27,14 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody AuthRequest request) {
-        UserDetails userDetails = userDetailsService.loadUserByUsername(request.getUsername());
+        UserDetails user = userDetailsService.loadUserByUsername(request.getUsername());
         
-        if (passwordEncoder.matches(request.getPassword(), userDetails.getPassword())) {
-            String accessToken = jwtService.generateToken(userDetails.getUsername());
-            String refreshToken = jwtService.generateRefreshToken(userDetails.getUsername());
-            
+        if (passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            String token = jwtService.generateToken(user.getUsername());
             return ResponseEntity.ok(AuthResponse.builder()
-                    .accessToken(accessToken)
-                    .refreshToken(refreshToken)
+                    .accessToken(token)
                     .build());
         }
-        
         throw new BadCredentialsException("Invalid username or password");
     }
 }

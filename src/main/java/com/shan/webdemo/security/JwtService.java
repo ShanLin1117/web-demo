@@ -20,13 +20,13 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 public class JwtService {
 
-    @Value("${jwt.secret}")
+    @Value("${app.jwt.secret}")
     private String jwtSecret;
 
-    @Value("${jwt.accessTokenExpiration}")
+    @Value("${app.jwt.accessTokenExpiration}")
     private long accessTokenExpiration;
 
-    @Value("${jwt.refreshTokenExpiration}")
+    @Value("${app.jwt.refreshTokenExpiration}")
     private long refreshTokenExpiration;
 
     private SecretKey getSigningKey() {

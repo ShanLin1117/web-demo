@@ -4,6 +4,10 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
+# 忽略環境配置檔
+src/main/resources/application-*.yml
+!src/main/resources/application-dev.yml.example
+
 ### STS ###
 .apt_generated
 .classpath
